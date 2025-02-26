@@ -121,7 +121,7 @@ Then click **Submit**.
 
 The collector you just created is now in an initial state ([ ]). Select the collector from the list and click `Generate token`. Copy this token to the clipboard.
 
-Then proceed with the installation of your collector according to the README at https://github.com/factrylabs/collector. Pass the copied token as `API_TOKEN`.
+with the installThen proceed ation of your collector according to the README at https://github.com/factrylabs/collector. Pass the copied token as `API_TOKEN`.
 
 For example:
 ```

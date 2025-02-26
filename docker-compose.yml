@@ -1,6 +1,8 @@
+version: '3.8'
+
 services:
   historian:
-    image: "factry/historian:${VERSION:-latest}"
+    image: "factry/historian:latest"
     hostname: "historian"
     depends_on:
       postgres:
@@ -8,16 +10,23 @@ services:
       influxdb:
         condition: service_started
     environment:
-      AUTO_MIGRATE: ${AUTO_MIGRATE:-true}
-      DB_HOST: postgres
-      DB_NAME: ${DB_NAME:-factry_historian}
-      DB_USER_NAME: ${DB_USER_NAME:-factry}
-      DB_PASSWORD: ${DB_PASSWORD}
-      GRPC_PORT: ${GRPC_PORT:-8001}
-      REST_PORT: ${REST_PORT:-8000}
+      AUTO_MIGRATE: "true"
+      DB_HOST: "postgres"
+      DB_NAME: "factry_historian"
+      DB_USER_NAME: "factry"
+      DB_PASSWORD: "password"
+      GRPC_PORT: "8001"
+      REST_PORT: "8000"
+      INFLUXDB_HOST: "influx"
+      INFLUXDB_PORT: "8086"
+      INFLUXDB_DATABASE: "historian"
+      INFLUXDB_USER: "factry"
+      INFLUXDB_PASSWORD: "password"
+      GRAFANA_HOST: "grafana"
+      GRAFANA_PORT: "3000"
     ports:
-      - "${REST_BIND_ADDRESS:-0.0.0.0}:${REST_PORT:-8000}:${REST_PORT:-8000}"
-      - "${GRPC_BIND_ADDRESS:-0.0.0.0}:${GRPC_PORT:-8001}:${GRPC_PORT:-8001}"
+      - "8000:8000"
+      - "8001:8001"
     links:
       - postgres
       - influxdb
@@ -25,44 +34,33 @@ services:
     volumes:
       - "historian:/var/opt/factry"
     restart: "unless-stopped"
+
   postgres:
     image: "postgres:17-alpine"
     hostname: "postgres"
     environment:
-      POSTGRES_DB: ${DB_NAME:-factry_historian}
-      POSTGRES_USER: ${DB_USER_NAME:-factry}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-factry}
+      POSTGRES_DB: "factry_historian"
+      POSTGRES_USER: "factry"
+      POSTGRES_PASSWORD: "password"
     volumes:
       - "postgres:/var/lib/postgresql/data"
     restart: "unless-stopped"
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U ${DB_USER_NAME:-factry} -d ${DB_NAME:-factry_historian}",
-        ]
+      test: ["CMD-SHELL", "pg_isready -U factry -d factry_historian"]
       interval: 5s
       timeout: 5s
       retries: 5
+
   grafana:
-    image: "grafana/grafana-oss:${GF_VERSION:-latest}"
-    hostname: grafana
+    image: "grafana/grafana-oss:latest"
+    hostname: "grafana"
     links:
       - postgres
       - influxdb
     environment:
-      GF_PLUGINS_ENABLE_ALPHA: "true"
-      GF_SERVER_ROOT_URL: "${GF_SERVER_ROOT_URL:-http://127.0.0.1}"
-      GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: "factry-historian-datasource"
-      GF_RENDERING_SERVER_URL: "http://renderer:8081/render"
-      GF_RENDERING_CALLBACK_URL: "http://grafana:${GRAFANA_PORT:-3000}/"
-      GF_ANALYTICS_REPORTING_ENABLED: "false"
-      GF_UPDATE_CHECK_DISABLED: "true"
-      GF_AUTH_ANONYMOUS_ENABLED: ${GF_AUTH_ANONYMOUS_ENABLED:-false}
-      GF_AUTH_ANONYMOUS_ORG_NAME: ${GF_AUTH_ANONYMOUS_ORG_NAME:-Factry}
-      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
+      GF_SECURITY_ADMIN_PASSWORD: "admin"
     ports:
-      - "${GF_BIND_ADDRESS:-0.0.0.0}:${GRAFANA_PORT:-3000}:${GRAFANA_PORT:-3000}"
+      - "3000:3000"
     volumes:
       - "grafana:/var/lib/grafana"
     restart: "unless-stopped"
@@ -74,22 +72,20 @@ services:
     restart: unless-stopped
   influxdb:
     image: "influxdb:1.8"
-    hostname: influx
+    hostname: "influx"
     environment:
       INFLUXDB_HTTP_AUTH_ENABLED: "true"
-      INFLUXDB_ADMIN_USER: ${INFLUXDB_ADMIN_USER:-factry}
-      INFLUXDB_ADMIN_PASSWORD: ${INFLUXDB_ADMIN_PASSWORD}
-      INFLUXDB_HTTP_FLUX_ENABLED: "true"
-      INFLUXDB_HTTP_LOG_ENABLED: "false"
-      INFLUXDB_DATA_QUERY_LOG_ENABLED: "false"
+      INFLUXDB_ADMIN_USER: "factry"
+      INFLUXDB_ADMIN_PASSWORD: "password"
     volumes:
       - "influxdb:/var/lib/influxdb"
     restart: "unless-stopped"
     healthcheck:
-      test: "wget --no-verbose --spider --tries=1 http://localhost:8086/ping || exit 1"
+      test: ["CMD-SHELL", "wget --no-verbose --spider --tries=1 http://localhost:8086/ping || exit 1"]
       interval: 5s
       timeout: 10s
       retries: 5
+
 volumes:
   grafana:
   historian:
