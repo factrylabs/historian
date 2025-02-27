@@ -12,12 +12,12 @@ cd historian
 docker compose up -d
 ```
 
-✅ No environment variables needed  
-✅ Everything runs with default values  
+✅ No environment variables needed
+✅ Everything runs with default values
 ✅ Access the services:
 - **Factry Historian** → [http://localhost:8000](http://localhost:8000) (Default login: `factry` / `password`)
 - **Grafana** → [http://localhost:3000](http://localhost:3000) (Login: `admin` / `admin`)
-- **InfluxDB** → [http://localhost:8086](http://localhost:8086) 
+- **InfluxDB** → [http://localhost:8086](http://localhost:8086)
 - **PostgreSQL** → `localhost:5432` (User: `factry`, Password: `password`)
 
 🚨 **Important:**
@@ -38,7 +38,7 @@ Once the services are running, open Factry Historian at:
    - **Admin User:** `factry`
    - **Admin Password:** `password`
 5. **Historian Configuration** → Ensure correct API & authentication settings.
-6. **Finish Setup** 
+6. **Finish Setup**
 
 ---
 
@@ -60,7 +60,7 @@ Once the services are running, open Factry Historian at:
 1. Navigate to **Collectors** in Factry Historian.
 2. Click **Create Collector** → e.g., OPC-UA Collector.
 3. Click **Generate Token** and copy it.
-4. Then proceed with the installation of your collector according to the README at https://github.com/factrylabs/collector. 
+4. Then proceed with the installation of your collector according to the README at https://github.com/factrylabs/collector.
 5. Pass the copied token as API_TOKEN.
 6. Run the collector with:
 
@@ -72,7 +72,7 @@ docker run -d --restart unless-stopped --name factry-collector -e API_TOKEN=<API
 
 ## Advanced Setup
 
-In the advanced directory, you'll find a more customizable docker compose setup with environment variables for configuration and a cloud-init script to automate the in a cloud environment.
+In the advanced directory, you'll find a more customizable docker compose setup with environment variables for configuration and a cloud-init script to automate the setup in a cloud environment.
 
 ---
 

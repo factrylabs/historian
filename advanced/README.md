@@ -4,7 +4,7 @@ This is a docker compose file for Factry Historian. It is based on the [Factry H
 
 ## 🛠 Configuring Environment Variables
 
-You can customize Factry Historian by defining environment variables in a `.env` file or passing them in the docker-compose command.
+You can customize Factry Historian by defining environment variables in a `.env` file or by passing them in the docker-compose command.
 
 ### 🔹 Required Environment Variables
 
