@@ -12,9 +12,9 @@ cd historian
 docker compose up -d
 ```
 
-✅ No environment variables needed
-✅ Everything runs with default values
-✅ Access the services:
+✅ No environment variables needed<br>
+✅ Everything runs with default values<br>
+✅ Access the services:<br>
 - **Factry Historian** → [http://localhost:8000](http://localhost:8000) (Default login: `factry` / `password`)
 - **Grafana** → [http://localhost:3000](http://localhost:3000) (Login: `admin` / `admin`)
 - **InfluxDB** → [http://localhost:8086](http://localhost:8086)
