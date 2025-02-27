@@ -70,7 +70,7 @@ sudo systemctl restart caddy
 
 cd ~/ || exit
 
-curl -sSL https://raw.githubusercontent.com/factrylabs/historian/refs/heads/main/docker-compose.yml -o docker-compose.yml
+curl -sSL https://raw.githubusercontent.com/factrylabs/historian/refs/heads/main/advanced/docker-compose.yml -o docker-compose.yml
 
 # Start services
 sudo -E docker compose -p historian up -d
