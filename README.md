@@ -76,6 +76,16 @@ In the advanced directory, you'll find a more customizable docker compose setup 
 
 ---
 
+
+## Configuring the Grafana datasource
+
+The easiest way to visualize your data in Factry historian, is through Grafana with the **Factry Historian Grafana Data Source Plugin**.
+The plugin should come pre-installed in the Grafana container, just proceed with the configuration steps described in the [documentation](https://docs.factry.cloud/docs/grafana-datasource/latest/2_configuration/) and start exploring.
+
+Find more info about the datasource on the [plugin page](https://grafana.com/grafana/plugins/factry-historian-datasource/).
+
+---
+
 ## ❓ Questions?
 
 For help, visit:
