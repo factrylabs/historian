@@ -53,12 +53,6 @@ services:
     volumes:
       - "grafana:/var/lib/grafana"
     restart: "unless-stopped"
-  grafana-image-renderer:
-    image: grafana/grafana-image-renderer:latest
-    hostname: renderer
-    links:
-      - grafana
-    restart: unless-stopped
   influxdb:
     image: "influxdb:1.8"
     hostname: "influx"

@@ -51,9 +51,6 @@ services:
     environment:
       GF_PLUGINS_ENABLE_ALPHA: "true"
       GF_SERVER_ROOT_URL: "${GF_SERVER_ROOT_URL:-http://127.0.0.1}"
-      GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: "factry-historian-datasource"
-      GF_RENDERING_SERVER_URL: "http://renderer:8081/render"
-      GF_RENDERING_CALLBACK_URL: "http://grafana:3000/"
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_UPDATE_CHECK_DISABLED: "true"
       GF_AUTH_ANONYMOUS_ENABLED: ${GF_AUTH_ANONYMOUS_ENABLED:-false}
@@ -64,12 +61,6 @@ services:
     volumes:
       - "grafana:/var/lib/grafana"
     restart: "unless-stopped"
-  grafana-image-renderer:
-    image: grafana/grafana-image-renderer:latest
-    hostname: renderer
-    links:
-      - grafana
-    restart: unless-stopped
   influxdb:
     image: "influxdb:1.8"
     hostname: influx
