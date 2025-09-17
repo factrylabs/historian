@@ -23,6 +23,9 @@ services:
     volumes:
       - "historian:/var/opt/factry"
     restart: "unless-stopped"
+    networks:
+      - historian_default
+
   postgres:
     image: "postgres:17-alpine"
     hostname: "postgres"
@@ -42,6 +45,9 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - historian_default
+
   grafana:
     image: "grafana/grafana-oss:${GF_VERSION:-latest}"
     hostname: grafana
@@ -56,11 +62,15 @@ services:
       GF_AUTH_ANONYMOUS_ENABLED: ${GF_AUTH_ANONYMOUS_ENABLED:-false}
       GF_AUTH_ANONYMOUS_ORG_NAME: ${GF_AUTH_ANONYMOUS_ORG_NAME:-Factry}
       GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
+      GF_INSTALL_PLUGINS: "factry-historian-datasource"
     ports:
       - "${GF_BIND_ADDRESS:-0.0.0.0}:${GRAFANA_PORT:-3000}:3000"
     volumes:
       - "grafana:/var/lib/grafana"
     restart: "unless-stopped"
+    networks:
+      - historian_default
+
   influxdb:
     image: "influxdb:1.8"
     hostname: influx
@@ -79,6 +89,13 @@ services:
       interval: 5s
       timeout: 10s
       retries: 5
+    networks:
+      - historian_default
+
+networks:
+  historian_default:
+    name: historian_default
+
 volumes:
   grafana:
   historian:
