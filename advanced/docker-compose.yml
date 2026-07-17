@@ -72,7 +72,7 @@ services:
       - historian_default
 
   influxdb:
-    image: "influxdb:1.8"
+    image: "influxdb:1.12"
     hostname: influx
     environment:
       INFLUXDB_HTTP_AUTH_ENABLED: "true"
