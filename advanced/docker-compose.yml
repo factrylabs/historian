@@ -27,6 +27,9 @@ services:
     environment:
       <<: *database-env
       AUTO_MIGRATE: ${AUTO_MIGRATE:-true}
+      # Passed through only when set: with no JWT_SECRET the server generates
+      # one into /var/opt/factry/jwt_secret. See README.md.
+      JWT_SECRET:
     ports:
       # Plain HTTP; belongs behind a TLS terminating proxy. See README.md.
       - "${REST_BIND_ADDRESS:-0.0.0.0}:${REST_PORT:-8000}:8000"

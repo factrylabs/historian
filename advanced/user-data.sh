@@ -56,6 +56,9 @@ sudo apt-get install -yq docker-ce docker-ce-cli containerd.io docker-buildx-plu
 DB_PASSWORD="$(openssl rand -base64 32 | cut -c1-16)"
 INFLUXDB_ADMIN_PASSWORD="$(openssl rand -base64 32 | cut -c1-16)"
 GF_SECURITY_ADMIN_PASSWORD="$(openssl rand -base64 32 | cut -c1-16)"
+# Encrypts secure settings. Losing it makes every stored collector token and
+# database password unreadable, so it has to live in .env alongside the rest.
+JWT_SECRET="$(openssl rand -base64 32)"
 
 cd ~/
 
@@ -69,6 +72,7 @@ cd ~/
 DB_PASSWORD=${DB_PASSWORD}
 INFLUXDB_ADMIN_PASSWORD=${INFLUXDB_ADMIN_PASSWORD}
 GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD}
+JWT_SECRET=${JWT_SECRET}
 
 # Defines the project name once, so the volumes are historian_* and the
 # compose commands below need no -p flag.
