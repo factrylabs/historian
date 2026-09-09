@@ -105,6 +105,10 @@ curl -fsSL --retry 5 --retry-delay 3 "${COMPOSE_URL}" -o docker-compose.yml
 # startup and the migration instead of queueing behind them.
 sudo -E docker compose pull --quiet
 
+# AUTO_MIGRATE defaults to false, so Historian refuses to start until the schema
+# is at the version its binary expects. `migrate latest` on an empty database
+# creates it, and waits for PostgreSQL itself.
+sudo -E docker compose run --rm migrate latest
 sudo -E docker compose up -d
 
 echo "Factry Historian is starting at https://${FQDN}"

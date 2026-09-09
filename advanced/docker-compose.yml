@@ -17,7 +17,7 @@ x-database-env: &database-env
 
 services:
   historian:
-    image: "factry/historian:${VERSION:-v8.1.9}"
+    image: &historian-image "factry/historian:${VERSION:-v8.1.9}"
     hostname: "historian"
     depends_on:
       postgres:
@@ -26,7 +26,7 @@ services:
         condition: service_healthy
     environment:
       <<: *database-env
-      AUTO_MIGRATE: ${AUTO_MIGRATE:-true}
+      AUTO_MIGRATE: ${AUTO_MIGRATE:-false}
       # Passed through only when set: with no JWT_SECRET the server generates
       # one into /var/opt/factry/jwt_secret. See README.md.
       JWT_SECRET:
@@ -40,6 +40,24 @@ services:
     restart: "unless-stopped"
     logging: *logging
 
+  # Database migrations. Not started by `up`; run it explicitly:
+  #   docker compose run --rm migrate latest
+  # It waits for PostgreSQL on its own. See README.md.
+  migrate:
+    image: *historian-image
+    profiles: ["migrate"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: ["/opt/factry/factry-historian-server", "migrate"]
+    environment:
+      <<: *database-env
+      # Unlike the server, migrate cannot fall back to the generated
+      # /var/opt/factry/jwt_secret, so this has to be set. Not enforced with
+      # `:?` because Compose interpolates every service on any `up`, which
+      # would make JWT_SECRET mandatory for deployments that do not need it.
+      JWT_SECRET:
+    logging: *logging
 
   postgres:
     image: "postgres:17-alpine"
