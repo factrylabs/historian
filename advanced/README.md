@@ -36,7 +36,7 @@ These have default values but can be overridden.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `VERSION` | `v8.1.9` | Factry Historian version to use |
-| `AUTO_MIGRATE` | `true` | Migrate the database automatically on start |
+| `AUTO_MIGRATE` | `false` | Migrate the database during server startup. Off by default: migrations are forward-only, so they are an explicit step. See [Database initialization and migrations](#-database-initialization-and-migrations) |
 | `DB_NAME` | `factry_historian` | PostgreSQL database name |
 | `DB_USER_NAME` | `factry` | PostgreSQL username |
 | `JWT_SECRET` | generated | Key used to encrypt secure settings. When unset, the server generates one into `/var/opt/factry/jwt_secret` in the `historian` volume. See [The JWT secret](#-the-jwt-secret) |
@@ -119,16 +119,101 @@ Back `.env` up. Losing the secret makes every stored secure setting unreadable.
 
 ---
 
-## ⬆️ Upgrading
+## 🗄 Database initialization and migrations
+
+### Why `AUTO_MIGRATE` is off
+
+If the server migrates during startup, then bumping `VERSION` and running `docker compose up -d` performs an irreversible schema migration as a side effect of a deploy, before anyone has decided to migrate. Historian's migrations are forward-only, so if the new version turns out to be wrong, the database cannot go back.
+
+With it off, a server whose binary expects a different schema version than the database holds refuses to start:
+
+```
+level=panic msg="Database version is not correct - error checking database version"
+```
+
+Under `restart: unless-stopped` it keeps restarting until you migrate, which turns a silent one-way migration into a deployment that stops and waits for you.
+
+Migrations run through the `migrate` service, which shares Historian's database settings and waits for PostgreSQL itself. It sits behind a Compose profile, so `up` never starts it. It does need [`JWT_SECRET`](#-the-jwt-secret).
+
+### First deployment
 
 ```sh
-# Back up first. Both Historian and Grafana run forward-only migrations.
+docker compose pull
+docker compose run --rm migrate latest
+docker compose up -d
+```
+
+`pull` first so that the Grafana download overlaps with the migration rather than queueing behind it.
+
+### Upgrading
+
+```sh
+# 1. Back up. Migrations are forward-only.
 docker compose exec postgres sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' \
   > historian-$(date +%F).sql
 
-# Then raise VERSION (and GF_VERSION) in .env and apply.
+# 2. Raise VERSION in .env, then fetch the new image.
 docker compose pull
+
+# 3. Stop the server, migrate, start it again.
+docker compose stop historian
+docker compose run --rm migrate latest --keep-old
 docker compose up -d
+```
+
+Read the [release notes](https://docs.factry.io/changelog) before upgrading across a minor version.
+
+### What `migrate latest` does
+
+It clones the database, migrates the clone, drops the original and renames the clone into place:
+
+```
+Database at version 0. Migrating to 8010023.
+Database migrated to version 8010023.
+Destroying database
+Old database factry_historian dropped.
+New database factry_historian_8010023 renamed to factry_historian.
+```
+
+The clone is on by default (`--clone`). Pass `--keep-old` to keep the pre-migration database instead of dropping it, which gives you a rollback point next to the live one. Remove it once the upgrade is confirmed.
+
+Running it when nothing is pending is safe:
+
+```
+Database up to date. No migration done.
+```
+
+Other subcommands:
+
+| Command | Purpose |
+|---------|---------|
+| `migrate version` | Print the schema version this binary targets |
+| `migrate latest` | Migrate to that version |
+| `migrate goto V` | Migrate to a specific version |
+| `migrate up` | Migrate one step |
+| `migrate step N` | Migrate N steps |
+
+`factry-historian-server install` is for bare-metal systemd installs and does not work in a container; it fails with `exec: "systemctl": executable file not found in $PATH`. There is no separate init step for Docker: `migrate latest` on an empty database creates the schema.
+
+### If a migration fails
+
+A failed migration rolls back but leaves the clone database behind, so the retry fails with:
+
+```
+Error: pq: database "factry_historian_8010023" already exists
+```
+
+Drop the database the error names, fix the cause, then retry:
+
+```sh
+docker compose exec postgres sh -c \
+  'dropdb -U "$POSTGRES_USER" factry_historian_8010023'
+```
+
+The clone is `<database>_<version>`, so the name differs when `DB_NAME` is overridden; take it from the error rather than from this example. To list what is there:
+
+```sh
+docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d postgres -l'
 ```
 
 ---
@@ -137,7 +222,7 @@ docker compose up -d
 
 [user-data.sh](user-data.sh) provisions an Ubuntu 24.04 LTS machine with Docker, Caddy and this compose file. Caddy terminates TLS for the Historian web UI on `https://<fqdn>` and for Grafana on `https://<fqdn>/grafana`, so the script binds the REST API and Grafana to loopback. The collector gRPC endpoint stays published on port 8001, where Historian terminates TLS itself.
 
-It writes the generated credentials, including `JWT_SECRET`, to `~/.env` next to the compose file.
+It writes the generated credentials, including `JWT_SECRET`, to `~/.env` next to the compose file, and runs `migrate latest` before starting Historian.
 
 Caddy needs a name that resolves publicly to the instance in order to obtain a certificate. The script checks that `hostname -f` returns a qualified name and stops if it does not, but it cannot tell whether that name actually points here, so a certificate can still fail afterwards. It prints where to look (`journalctl -u caddy -e`) rather than claiming the site is up.
 
