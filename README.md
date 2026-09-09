@@ -17,11 +17,11 @@ docker compose up -d
 ✅ Access the services:<br>
 - **Factry Historian** → [http://localhost:8000](http://localhost:8000) (Default login: `factry` / `password`)
 - **Grafana** → [http://localhost:3000](http://localhost:3000) (Login: `admin` / `admin`)
-- **InfluxDB** → [http://localhost:8086](http://localhost:8086)
-- **PostgreSQL** → `localhost:5432` (User: `factry`, Password: `password`)
+
+InfluxDB and PostgreSQL are only reachable from the other containers. They are addressed as `influx:8086` and `postgres:5432` on the Compose network and are deliberately not published to the host.
 
 🚨 **Important:**
-This quick setup uses default passwords and should not be used for production. See the next section for customizing the setup.
+This quick setup uses well-known default passwords and publishes ports 8000, 8001 and 3000 on every network interface. Run it on a local machine only. For any host that other people can reach, use the [advanced setup](advanced), which refuses to start unless passwords are supplied.
 
 ## 🔧 Configuring Factry Historian via the Browser
 
@@ -72,7 +72,7 @@ docker run -d --restart unless-stopped --name factry-collector -e API_TOKEN=<API
 
 ## Advanced Setup
 
-In the advanced directory, you'll find a more customizable docker compose setup with environment variables for configuration and a cloud-init script to automate the setup in a cloud environment.
+In the [advanced](advanced) directory, you'll find a more customizable docker compose setup with environment variables for configuration and a cloud-init script to automate the setup in a cloud environment. Use it for anything other than a local trial.
 
 ---
 

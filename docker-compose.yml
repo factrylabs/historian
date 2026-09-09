@@ -1,3 +1,16 @@
+# Quick-start Docker Compose file for Factry Historian.
+#
+# This file uses well-known default passwords so that `docker compose up -d`
+# works with no configuration. It is meant for evaluation on a local machine
+# only. For anything reachable by others, use ../advanced, which requires
+# passwords to be supplied explicitly.
+
+x-logging: &logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   historian:
     image: "factry/historian:latest"
@@ -6,7 +19,7 @@ services:
       postgres:
         condition: service_healthy
       influxdb:
-        condition: service_started
+        condition: service_healthy
     environment:
       AUTO_MIGRATE: "true"
       DB_HOST: "postgres"
@@ -16,15 +29,10 @@ services:
     ports:
       - "8000:8000"
       - "8001:8001"
-    links:
-      - postgres
-      - influxdb
-      - grafana
     volumes:
       - "historian:/var/opt/factry"
     restart: "unless-stopped"
-    networks:
-      - historian_default
+    logging: *logging
 
   postgres:
     image: "postgres:17-alpine"
@@ -41,15 +49,15 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    networks:
-      - historian_default
+    # SIGINT is PostgreSQL's fast shutdown. The default SIGTERM waits for
+    # clients to disconnect and then gets SIGKILLed, forcing crash recovery.
+    stop_signal: "SIGINT"
+    stop_grace_period: 60s
+    logging: *logging
 
   grafana:
     image: "grafana/grafana-oss:latest"
     hostname: "grafana"
-    links:
-      - postgres
-      - influxdb
     environment:
       GF_SECURITY_ADMIN_PASSWORD: "admin"
       GF_INSTALL_PLUGINS: "factry-historian-datasource"
@@ -58,8 +66,14 @@ services:
     volumes:
       - "grafana:/var/lib/grafana"
     restart: "unless-stopped"
-    networks:
-      - historian_default
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+      start_interval: 2s
+    logging: *logging
 
   influxdb:
     image: "influxdb:1.12"
@@ -68,6 +82,7 @@ services:
       INFLUXDB_HTTP_AUTH_ENABLED: "true"
       INFLUXDB_ADMIN_USER: "factry"
       INFLUXDB_ADMIN_PASSWORD: "password"
+      INFLUXDB_HTTP_FLUX_ENABLED: "true"
       INFLUXDB_HTTP_LOG_ENABLED: "false"
       INFLUXDB_DATA_QUERY_LOG_ENABLED: "false"
     volumes:
@@ -78,12 +93,9 @@ services:
       interval: 5s
       timeout: 10s
       retries: 5
-    networks:
-      - historian_default
-
-networks:
-  historian_default:
-    name: historian_default
+    # Give InfluxDB time to flush its WAL instead of being SIGKILLed after 10s.
+    stop_grace_period: 60s
+    logging: *logging
 
 volumes:
   grafana:
