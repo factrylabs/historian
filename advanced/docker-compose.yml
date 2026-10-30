@@ -17,7 +17,7 @@ x-database-env: &database-env
 
 services:
   historian:
-    image: &historian-image "factry/historian:${VERSION:-v8.1.9}"
+    image: &historian-image "factry/historian:${VERSION:-v8.3.0}"
     hostname: "historian"
     depends_on:
       postgres:
