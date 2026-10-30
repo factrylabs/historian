@@ -35,7 +35,7 @@ These have default values but can be overridden.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `VERSION` | `v8.1.9` | Factry Historian version to use |
+| `VERSION` | `v8.3.0` | Factry Historian version to use |
 | `AUTO_MIGRATE` | `false` | Migrate the database during server startup. Off by default: migrations are forward-only, so they are an explicit step. See [Database initialization and migrations](#-database-initialization-and-migrations) |
 | `DB_NAME` | `factry_historian` | PostgreSQL database name |
 | `DB_USER_NAME` | `factry` | PostgreSQL username |
